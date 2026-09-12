@@ -138,6 +138,12 @@ docker compose --profile demo down -v
 
 ### 🚂 Railway ডিপ্লয়মেন্ট (রেকমেন্ডেড PaaS)
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/<TEMPLATE_CODE>?utm_medium=integration&utm_source=button&utm_campaign=xtream-proxy)
+
+> ⚙️ ওয়ান-ক্লিক বাটন: টেমপ্লেট পাবলিশ করার পর `<TEMPLATE_CODE>` বসান
+> (গাইড: [TEMPLATE.md](../TEMPLATE.md))। কমান্ড-লাইন বিকল্প:
+> `railway deploy --template <CODE> --variable XTREAM_BASE_URL=http://host:8080 ...`
+
 রিপোজিটরি রুটে **Railway Infrastructure as Code** রেডি করা আছে — এক কমান্ডে
 প্রজেক্ট + সার্ভিস তৈরি হয়, Railway-টিউন করা সেটিংসহ:
 
@@ -157,6 +163,7 @@ railway config apply           # ডিপ্লয়!
 
 - কনফিগ ফাইল: [`.railway/railway.ts`](../.railway/railway.ts)
 - সম্পূর্ণ গাইড: [`.railway/README.md`](../.railway/README.md)
+- ওয়ান-ক্লিক টেমপ্লেট পাবলিশ কিট: [`TEMPLATE.md`](../TEMPLATE.md) (+ [`CHANGELOG.md`](../CHANGELOG.md) — অটো-আপডেট নোটিফিকেশনে এটিই দেখায়)
 - CI/CD: [`.github/workflows/railway-deploy.yml`](../.github/workflows/railway-deploy.yml) — PR-এ plan, মার্জে apply (`RAILWAY_TOKEN` সিক্রেট লাগে)
 
 > ℹ️ পুরনো `railway.json`/"Config as Code" Railway ডেপ্রিকেট করেছে — তাই সরাসরি
