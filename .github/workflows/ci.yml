@@ -1,0 +1,188 @@
+name: CI
+
+# সব ব্র্যাঞ্চে পুশে + main টার্গেট করা PR-এ চলে
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------- Go: ভেট + টেস্ট + বিল্ড ----------
+  go:
+    name: Go vet / test / build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: xtream-proxy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: xtream-proxy/go.mod
+      - name: go vet
+        run: go vet ./...
+      - name: go test
+        run: go test ./...
+      - name: go build
+        run: go build ./...
+
+  # ---------- Docker: ইমেজ বিল্ড + কনটেইনার স্মোক টেস্ট ----------
+  docker:
+    name: Docker build + smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: প্রক্সি ইমেজ বিল্ড (ডিফল্ট টার্গেট)
+        uses: docker/build-push-action@v6
+        with:
+          context: xtream-proxy
+          target: proxy
+          push: false
+          load: true
+          tags: xtream-proxy:ci
+
+      - name: সিমুলেটর ইমেজ বিল্ড (sim টার্গেট)
+        uses: docker/build-push-action@v6
+        with:
+          context: xtream-proxy
+          target: sim
+          push: false
+          load: true
+          tags: xtream-proxy-sim:ci
+
+      - name: কনটেইনার বুট + /status হেলথচেক
+        run: |
+          set -euo pipefail
+
+          # HEALTHCHECK ইমেজে সেট আছে কিনা
+          hc=$(docker inspect --format '{{if .Config.Healthcheck}}{{.Config.Healthcheck.Test}}{{end}}' xtream-proxy:ci)
+          echo "HEALTHCHECK: ${hc}"
+          case "$hc" in
+            *status*) echo "✅ HEALTHCHECK কনফিগার করা আছে" ;;
+            *) echo "❌ HEALTHCHECK পাওয়া যায়নি"; exit 1 ;;
+          esac
+
+          # নন-রুট ইউজারে চলে কিনা
+          user=$(docker inspect --format '{{.Config.User}}' xtream-proxy:ci)
+          echo "USER: ${user}"
+          test "${user}" = "appuser"
+
+          # ক্রেডেনশিয়াল ছাড়াই বুট হতে হবে → /status 200
+          docker run -d --name xp -p 18000:8000 xtream-proxy:ci
+          echo "⏳ কনটেইনারের জন্য অপেক্ষা..."
+          ok=""
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:18000/status; then ok=1; break; fi
+            sleep 1
+          done
+          if [ -z "$ok" ]; then
+            echo "❌ কনটেইনার থেকে /status পাওয়া যায়নি"
+            docker logs xp
+            exit 1
+          fi
+
+          echo "--- /status ---"
+          curl -fsS http://127.0.0.1:18000/status
+          echo "--- / (ল্যান্ডিং পেজ) ---"
+          curl -fsS http://127.0.0.1:18000/ | grep -q "Xtream All-in-One"
+
+          echo "--- কনটেইনার লগ ---"
+          docker logs xp
+          docker rm -f xp
+
+  # ---------- Compose: পুরো স্ট্যাক এন্ড-টু-এন্ড ----------
+  compose-e2e:
+    name: Docker Compose end-to-end
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: xtream-proxy
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: কনফিগ যাচাই
+        run: docker compose --profile demo config -q
+
+      - name: ডেমো স্ট্যাক চালু (প্রক্সি + নকল আপস্ট্রিম)
+        run: |
+          cp .env.example .env
+          docker compose --profile demo up -d --build
+
+      - name: এন্ডপয়েন্ট চেক
+        run: |
+          set -euo pipefail
+          BASE=http://127.0.0.1:8100
+
+          # URL রেডি হওয়া পর্যন্ত অপেক্ষা (কম্পোজ স্ট্যাক ওঠার সময় নেয়)
+          wait_for() {
+            for _ in $(seq 1 60); do
+              if curl -fsS -o /dev/null "$1"; then return 0; fi
+              sleep 2
+            done
+            return 1
+          }
+
+          echo "⏳ সার্ভিসগুলোর জন্য অপেক্ষা..."
+          if ! wait_for "$BASE/status"; then
+            echo "❌ ডেমো প্রক্সি ওঠেনি"
+            docker compose --profile demo logs --no-color
+            exit 1
+          fi
+
+          echo "--- /status (ডেমো প্রক্সি, পোর্ট 8100) ---"
+          curl -fsS "$BASE/status"
+
+          echo "--- HLS প্লেলিস্ট রিরাইট চেক ---"
+          playlist=""
+          for _ in $(seq 1 30); do
+            playlist=$(curl -fsS "$BASE/hls/1001.m3u8" || true)
+            case "$playlist" in *"/hls/1001/"*) break ;; esac
+            sleep 2
+          done
+          echo "$playlist"
+          case "$playlist" in
+            *"/hls/1001/"*) echo "✅ m3u8 লোকাল পাথে রিরাইট হয়েছে" ;;
+            *) echo "❌ m3u8 রিরাইট হয়নি"; exit 1 ;;
+          esac
+
+          # আপস্ট্রিম ক্রেডেনশিয়াল পাথ (live/<user>/<pass>/) ক্লায়েন্টে গেলে ব্যর্থ
+          case "$playlist" in
+            *"live/test/test"*)
+              echo "❌ আপস্ট্রিম ক্রেডেনশিয়াল/URL ক্লায়েন্টে লিক করেছে"; exit 1 ;;
+            *) echo "✅ প্লেলিস্টে আপস্ট্রিম ক্রেডেনশিয়াল লিক নেই" ;;
+          esac
+
+          echo "--- TS চাঙ্ক প্রক্সি চেক ---"
+          # রিরাইট করা লাইন ফুল পাথ দেয় (যেমন /hls/1001/1001_123.ts) → শুধু নামটা নিই
+          chunk=$(echo "$playlist" | grep -m1 '\.ts$' | sed 's#.*/##' || true)
+          echo "চাঙ্ক: ${chunk}"
+          size=$(curl -fsS "$BASE/hls/1001/${chunk}" | wc -c)
+          echo "চাঙ্ক সাইজ: ${size} বাইট"
+          test "$size" -gt 0
+          echo "✅ চাঙ্ক প্রক্সি কাজ করছে"
+
+          echo "--- 1-to-Many ফ্যান-আউট স্ট্রিম চেক ---"
+          # -m 4 টাইমআউট ইচ্ছাকৃত (লাইভ স্ট্রিম কখনো শেষ হয় না) → pipefail-এ ধরা পড়ে না
+          bytes=$(curl -s -N -m 4 "$BASE/live/1001" | wc -c || true)
+          echo "প্রাপ্ত বাইট: ${bytes}"
+          test "$bytes" -gt 0
+          echo "✅ /live/1001 স্ট্রিম দিচ্ছে"
+
+          echo "--- পরিষ্কার শাটডাউন চেক ---"
+          docker compose --profile demo stop proxy-demo
+          docker compose --profile demo logs --no-color proxy-demo | tail -5
+
+      - name: লগ (ব্যর্থ হলেও)
+        if: always()
+        run: docker compose --profile demo logs --no-color
+
+      - name: টিয়ারডাউন
+        if: always()
+        run: docker compose --profile demo down -v

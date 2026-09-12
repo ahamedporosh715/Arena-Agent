@@ -1,0 +1,61 @@
+# Docker Compose — Xtream All-in-One Streaming Proxy
+#
+#   docker compose up -d --build                    # শুধু প্রক্সি
+#   docker compose --profile demo up -d --build     # প্রক্সি + নকল আপস্ট্রিম + ডেমো প্রক্সি
+#   docker compose logs -f
+#   docker compose down
+#
+# ক্রেডেনশিয়াল .env ফাইলে রাখুন (নমুনা: .env.example) — .env কমিট হয় না।
+
+name: xtream-proxy
+
+services:
+  # ---------- প্রোডাকশন প্রক্সি ----------
+  proxy:
+    build:
+      context: .
+      target: proxy
+    image: xtream-proxy:latest
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${XTREAM_HOST_PORT:-8000}:8000"
+    environment:
+      # কনটেইনার-ভিতরের পোর্ট ফিক্সড; হোস্ট পোর্ট বদলাতে XTREAM_HOST_PORT
+      PORT: "8000"
+      XTREAM_BASE_URL: "${XTREAM_BASE_URL:-}"
+      XTREAM_USERNAME: "${XTREAM_USERNAME:-}"
+      XTREAM_PASSWORD: "${XTREAM_PASSWORD:-}"
+
+  # ---------- নকল Xtream আপস্ট্রিম (demo প্রোফাইল) ----------
+  upstream-sim:
+    profiles: ["demo"]
+    build:
+      context: .
+      target: sim
+    image: xtream-proxy-upstream-sim:latest
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${XTREAM_SIM_HOST_PORT:-9000}:9000"
+    command: ["-port", "9000"]
+
+  # ---------- ডেমো প্রক্সি — সিমুলেটরেই পয়েন্ট করা ----------
+  proxy-demo:
+    profiles: ["demo"]
+    build:
+      context: .
+      target: proxy
+    image: xtream-proxy:latest
+    init: true
+    restart: unless-stopped
+    depends_on:
+      - upstream-sim
+    ports:
+      - "${XTREAM_DEMO_HOST_PORT:-8100}:8000"
+    environment:
+      PORT: "8000"
+      # সার্ভিস নেম দিয়ে DNS রেজলভ হয় — রিয়েল অ্যাকাউন্ট ছাড়াই এন্ড-টু-এন্ড টেস্ট
+      XTREAM_BASE_URL: "http://upstream-sim:9000"
+      XTREAM_USERNAME: "test"
+      XTREAM_PASSWORD: "test"
