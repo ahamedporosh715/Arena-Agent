@@ -13,6 +13,7 @@
 - 🧪 **বিল্ট-ইন সিমুলেটর** — রিয়েল Xtream সার্ভার ছাড়াই টেস্ট করার জন্য নকল আপস্ট্রিম
 - 🛑 **গ্রেসফুল শাটডাউন** — SIGINT/SIGTERM-এ সব সংযোগ পরিষ্কারভাবে বন্ধ
 - 🔐 **ক্রেডেনশিয়াল কোডে নয়** — env ভ্যারিয়েবল/ফ্ল্যাগ থেকে লোড হয়
+- 🐳 **Docker রেডি** — মাল্টি-স্টেজ বিল্ড, নন-রুট ইউজার, হেলথচেক + এক-কমান্ড Compose ডিপ্লয়মেন্ট
 
 ## 📁 প্রজেক্ট স্ট্রাকচার
 
@@ -24,6 +25,10 @@ xtream-proxy/
 ├── broadcaster.go           # 1-to-Many ফ্যান-আউট ইঞ্জিন + স্ট্যাটাস
 ├── proxy_test.go            # ইউনিট টেস্ট (m3u8 রিরাইট, ভ্যালিডেশন)
 ├── cmd/upstream-sim/main.go # টেস্টের জন্য নকল Xtream সার্ভার
+├── Dockerfile               # মাল্টি-স্টেজ বিল্ড (proxy + sim টার্গেট)
+├── docker-compose.yml       # এক-কমান্ড ডিপ্লয়মেন্ট + ডেমো স্ট্যাক
+├── .dockerignore
+├── .env.example             # কনফিগের নমুনা → কপি করে .env বানান
 ├── go.mod
 └── README.md
 ```
@@ -64,6 +69,73 @@ export XTREAM_PASSWORD="your_password"
 
 ভিডিও প্লেয়ারে (VLC) দিন: `http://localhost:8000/live/12345` বা `http://localhost:8000/ts/12345`
 
+## 🐳 Docker
+
+মাল্টি-স্টেজ বিল্ড: বিল্ড স্টেজে `golang:1.23-alpine`, রানটাইমে ছোট `alpine` — শুধু
+স্ট্যাটিক বাইনারিটাই যায় (`CGO_ENABLED=0`, `-trimpath`, `-s -w`)। কনটেইনার চলে
+**নন-রুট ইউজারে** এবং `/status`-এ **HEALTHCHECK** সেট করা।
+
+```bash
+cd xtream-proxy
+
+# ইমেজ বিল্ড (ডিফল্ট টার্গেট = প্রোডাকশন প্রক্সি)
+docker build -t xtream-proxy .
+
+# রান — ক্রেডেনশিয়াল env-এ
+docker run -d --name xtream-proxy -p 8000:8000 \
+  -e XTREAM_BASE_URL="http://source-server.com:8080" \
+  -e XTREAM_USERNAME="your_username" \
+  -e XTREAM_PASSWORD="your_password" \
+  xtream-proxy
+
+curl http://localhost:8000/status        # হেলথ এন্ডপয়েন্ট
+docker inspect --format '{{.State.Health.Status}}' xtream-proxy
+```
+
+### Docker Compose দিয়ে ডিপ্লয়মেন্ট
+
+```bash
+cd xtream-proxy
+cp .env.example .env     # XTREAM_* ভ্যালু বসান (.env কমিট হয় না)
+docker compose up -d --build
+
+docker compose logs -f
+docker compose down
+```
+
+প্রক্সি কনটেইনারের ভিতরে সবসময় পোর্ট **8000**; হোস্টের দিকের পোর্ট বদলাতে `.env`-এ
+`XTREAM_HOST_PORT` সেট করুন।
+
+### ডেমো স্ট্যাক — নকল আপস্ট্রিমসহ, রিয়েল সার্ভার ছাড়াই
+
+`demo` প্রোফাইল `upstream-sim` (পোর্ট 9000) চালু করে আর `proxy-demo` (পোর্ট 8100)
+তাকে `http://upstream-sim:9000`-এ পয়েন্ট করে — পুরো পাইপলাইন এন্ড-টু-এন্ড টেস্ট:
+
+```bash
+cd xtream-proxy
+docker compose --profile demo up -d --build
+
+curl http://localhost:8100/status                            # ড্যাশবোর্ড
+curl http://localhost:8100/hls/1001.m3u8                     # রিরাইট করা প্লেলিস্ট
+curl -N -m 3 http://localhost:8100/live/1001 >/dev/null      # ফ্যান-আউট স্ট্রিম
+
+docker compose --profile demo down -v
+```
+
+| Env ভ্যারিয়েবল | ডিফল্ট | বিবরণ |
+|---|---|---|
+| `XTREAM_BASE_URL` | (খালি) | Xtream সার্ভারের বেস URL |
+| `XTREAM_USERNAME` / `XTREAM_PASSWORD` | (খালি) | ক্রেডেনশিয়াল |
+| `XTREAM_HOST_PORT` | `8000` | প্রক্সির হোস্ট পোর্ট |
+| `XTREAM_DEMO_HOST_PORT` | `8100` | ডেমো প্রক্সির হোস্ট পোর্ট |
+| `XTREAM_SIM_HOST_PORT` | `9000` | সিমুলেটরের হোস্ট পোর্ট |
+
+> 🔐 `.env` ফাইলে ক্রেডেনশিয়াল রাখুন — ফাইলটি `.gitignore`-এ আছে, কমিট করবেন না।
+> শুধু `.env.example` (ভ্যালু ছাড়া) কমিট হয়।
+>
+> ⚠️ পাবলিকলি এক্সপোজ করার আগে "নিরাপত্তা নোট" অংশটি পড়ুন — `/hls/<id>/u/<base64>`
+> পাথ SSRF-প্রবণ, তাই ফায়ারওয়াল/অথেন্টিকেশনের পেছনে রাখুন।
+
 ## 🧪 সিমুলেটর দিয়ে টেস্ট (রিয়েল সার্ভার লাগবে না)
 
 ```bash
@@ -80,6 +152,17 @@ curl http://localhost:8000/status                         # ড্যাশব�
 ```
 
 ইউনিট টেস্ট: `go test ./...`
+
+Docker দিয়ে এন্ড-টু-এন্ড (রিয়েল সার্ভারও লাগবে না):
+
+```bash
+docker compose --profile demo up -d --build
+curl http://localhost:8100/status
+docker compose --profile demo down -v
+```
+
+CI (`.github/workflows/ci.yml`): `go vet` + `go test` + `go build`, ইমেজ বিল্ড ও
+কনটেইনার স্মোক টেস্ট, এবং কম্পোজ ডেমো স্ট্যাকের এন্ড-টু-এন্ড চেক।
 
 ## 🏗️ আর্কিটেকচার নোট
 
@@ -105,8 +188,8 @@ curl http://localhost:8000/status                         # ড্যাশব�
 
 ## 📌 রোডম্যাপ
 
-1. JWT টোকেন অথেন্টিকেশন
-2. Redis ক্যাশিং (m3u8 প্লেলিস্ট)
-3. Docker + Docker Compose ডিপ্লয়মেন্ট
-4. Prometheus মেট্রিক্স মনিটরিং
-5. FFmpeg ট্রান্সকোডিং পাইপলাইন
+1. ⬜ JWT টোকেন অথেন্টিকেশন
+2. ⬜ Redis ক্যাশিং (m3u8 প্লেলিস্ট)
+3. ✅ ~~Docker + Docker Compose ডিপ্লয়মেন্ট~~ — **সম্পন্ন**: মাল্টি-স্টেজ ইমেজ, নন-রুট রানটাইম, হেলথচেক, কম্পোজ স্ট্যাক ও CI এন্ড-টু-এন্ড টেস্ট
+4. ⬜ Prometheus মেট্রিক্স মনিটরিং
+5. ⬜ FFmpeg ট্রান্সকোডিং পাইপলাইন

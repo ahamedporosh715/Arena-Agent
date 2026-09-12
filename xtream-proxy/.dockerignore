@@ -1,0 +1,13 @@
+# বিল্ড কনটেক্সট ছোট ও আলাদা রাখা — ইমেজ ক্যাশে দ্রুত হয়
+.git
+.gitignore
+bin/
+*.log
+.env
+.env.*
+
+# বিল্ডের জন্য দরকার নেই
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
