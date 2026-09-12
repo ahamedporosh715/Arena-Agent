@@ -1,0 +1,13 @@
+{
+  "name": "arena-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Railway Infrastructure as Code (IaC) deps for .railway/railway.ts — Arena-Agent workspace",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "railway": "^3.11.0"
+  }
+}

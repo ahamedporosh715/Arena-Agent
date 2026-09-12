@@ -1,0 +1,59 @@
+# Railway Infrastructure as Code — plan on PR, apply on merge.
+#
+# রিভিউ করা প্ল্যানটাই ল্যান্ড হয়: railwayapp/config অ্যাকশন PR-এ প্ল্যান কমেন্ট
+# করে, আর মার্জে সেই পিন করা প্ল্যান-আর্টিফ্যাক্টটাই অ্যাপ্লাই করে (রি-ইভ্যালুয়েট নয়)।
+#
+# চালু করতে: Railway-তে Project Token বানিয়ে GitHub রিপো সিক্রেট
+# `RAILWAY_TOKEN`-এ রাখুন (docs.railway.com → Public API → Project Token)।
+# টোকেন না থাকলে জবগুলো নিঃশব্দে স্কিপ হয় — বাকি CI ভাঙে না।
+
+name: Railway deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - ".railway/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+  id-token: write
+
+jobs:
+  # ---------- PR-এ প্ল্যান: কী কী বদলাবে তার কমেন্ট ----------
+  plan:
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: RAILWAY_TOKEN না থাকলে স্কিপ
+        if: ${{ secrets.RAILWAY_TOKEN == '' }}
+        run: echo "ℹ️ RAILWAY_TOKEN সিক্রেট নেই — Railway প্ল্যান স্কিপ করা হলো।"
+
+      - uses: railwayapp/config@v1
+        if: ${{ secrets.RAILWAY_TOKEN != '' }}
+        with:
+          command: plan
+          railway-token: ${{ secrets.RAILWAY_TOKEN }}
+
+  # ---------- মার্জ হলে অ্যাপ্লাই (পিন করা প্ল্যান) ----------
+  apply:
+    if: github.event.action == 'closed' && github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: RAILWAY_TOKEN না থাকলে স্কিপ
+        if: ${{ secrets.RAILWAY_TOKEN == '' }}
+        run: echo "ℹ️ RAILWAY_TOKEN সিক্রেট নেই — Railway অ্যাপ্লাই স্কিপ করা হলো।"
+
+      - uses: railwayapp/config@v1
+        if: ${{ secrets.RAILWAY_TOKEN != '' }}
+        with:
+          command: apply
+          railway-token: ${{ secrets.RAILWAY_TOKEN }}
