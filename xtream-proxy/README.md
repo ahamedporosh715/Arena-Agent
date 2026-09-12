@@ -136,6 +136,39 @@ docker compose --profile demo down -v
 > ⚠️ পাবলিকলি এক্সপোজ করার আগে "নিরাপত্তা নোট" অংশটি পড়ুন — `/hls/<id>/u/<base64>`
 > পাথ SSRF-প্রবণ, তাই ফায়ারওয়াল/অথেন্টিকেশনের পেছনে রাখুন।
 
+### 🚂 Railway ডিপ্লয়মেন্ট (রেকমেন্ডেড PaaS)
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/<TEMPLATE_CODE>?utm_medium=integration&utm_source=button&utm_campaign=xtream-proxy)
+
+> ⚙️ ওয়ান-ক্লিক বাটন: টেমপ্লেট পাবলিশ করার পর `<TEMPLATE_CODE>` বসান
+> (গাইড: [TEMPLATE.md](../TEMPLATE.md))। কমান্ড-লাইন বিকল্প:
+> `railway deploy --template <CODE> --variable XTREAM_BASE_URL=http://host:8080 ...`
+
+রিপোজিটরি রুটে **Railway Infrastructure as Code** রেডি করা আছে — এক কমান্ডে
+প্রজেক্ট + সার্ভিস তৈরি হয়, Railway-টিউন করা সেটিংসহ:
+
+```bash
+npm install                    # Railway SDK (একবার)
+railway login && railway link
+railway config plan            # কী বদলাবে তার প্রিভিউ (নিরাপদ)
+railway config apply           # ডিপ্লয়!
+```
+
+তারপর Railway ড্যাশবোর্ড → **Variables**-এ `XTREAM_BASE_URL` / `XTREAM_USERNAME` /
+`XTREAM_PASSWORD` বসান — রিডিপ্লয় নিজে থেকেই হবে। Railway নিজের `PORT` env
+ইনজেক্ট করে এবং `/status` হেলথচেক + SIGTERM গ্রেসফুল শাটডাউন আগে থেকেই রেলওয়ে-রেডি
+— কোডে কোনো পরিবর্তন লাগেনি। ইমেজের নন-রুট ইউজার, `HEALTHCHECK` ও ছোট স্ট্যাটিক
+বিল্ডও Railway-তে কাজে আসে। জিরো-ডাউনটাইম ডিপ্লয় (`overlapSeconds`) এবং পূর্ণ
+গ্রেসফুল শাটডাউন (`drainingSeconds`) কনফিগ করা।
+
+- কনফিগ ফাইল: [`.railway/railway.ts`](../.railway/railway.ts)
+- সম্পূর্ণ গাইড: [`.railway/README.md`](../.railway/README.md)
+- ওয়ান-ক্লিক টেমপ্লেট পাবলিশ কিট: [`TEMPLATE.md`](../TEMPLATE.md) (+ [`CHANGELOG.md`](../CHANGELOG.md) — অটো-আপডেট নোটিফিকেশনে এটিই দেখায়)
+- CI/CD: [`.github/workflows/railway-deploy.yml`](../.github/workflows/railway-deploy.yml) — PR-এ plan, মার্জে apply (`RAILWAY_TOKEN` সিক্রেট লাগে)
+
+> ℹ️ পুরনো `railway.json`/"Config as Code" Railway ডেপ্রিকেট করেছে — তাই সরাসরি
+> IaC (`.railway/railway.ts`) ব্যবহার করা হয়েছে।
+
 ## 🧪 সিমুলেটর দিয়ে টেস্ট (রিয়েল সার্ভার লাগবে না)
 
 ```bash
@@ -191,5 +224,6 @@ CI (`.github/workflows/ci.yml`): `go vet` + `go test` + `go build`, ইমেজ
 1. ⬜ JWT টোকেন অথেন্টিকেশন
 2. ⬜ Redis ক্যাশিং (m3u8 প্লেলিস্ট)
 3. ✅ ~~Docker + Docker Compose ডিপ্লয়মেন্ট~~ — **সম্পন্ন**: মাল্টি-স্টেজ ইমেজ, নন-রুট রানটাইম, হেলথচেক, কম্পোজ স্ট্যাক ও CI এন্ড-টু-এন্ড টেস্ট
-4. ⬜ Prometheus মেট্রিক্স মনিটরিং
-5. ⬜ FFmpeg ট্রান্সকোডিং পাইপলাইন
+4. ✅ ~~Railway PaaS ডিপ্লয়মেন্ট~~ — **সম্পন্ন**: Infrastructure as Code (`.railway/railway.ts`), হেলথচেক + গ্রেসফুল শাটডাউন টিউনিং, CI/CD plan/apply ওয়ার্কফ্লো
+5. ⬜ Prometheus মেট্রিক্স মনিটরিং
+6. ⬜ FFmpeg ট্রান্সকোডিং পাইপলাইন

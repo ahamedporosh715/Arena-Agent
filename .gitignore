@@ -1,0 +1,11 @@
+# Node — Railway IaC SDK deps (.railway/railway.ts)
+node_modules/
+
+# সিক্রেট/এনভ — কখনো কমিট নয় (নমুনা .env.example নিরাপদ)
+.env
+.env.*
+!.env.example
+
+# লগ ও OS ফাইল
+*.log
+.DS_Store
