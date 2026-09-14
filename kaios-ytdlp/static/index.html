@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#101827">
+  <title>Premium Downloader</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="badge">KaiOS 2.5 Share App</div>
+    <h1>শেয়ার করলেই ডাউনলোড</h1>
+    <p>Browser → Options → Share → Premium Downloader। copy-paste লাগবে না।</p>
+  </header>
+
+  <main>
+    <section class="card nowPlaying">
+      <span class="label">Shared link</span>
+      <h2 id="sharedTitle">লিংকের অপেক্ষায়…</h2>
+      <p id="sharedUrl">KaiOS Browser থেকে Share করুন।</p>
+    </section>
+
+    <section class="card controls">
+      <div class="grid">
+        <button id="infoBtn" data-focusable="1">Info</button>
+        <button id="q240" data-focusable="1">240p</button>
+        <button id="q360" data-focusable="1" class="primary">360p</button>
+        <button id="q480" data-focusable="1">480p</button>
+        <button id="q720" data-focusable="1">720p</button>
+        <button id="audio" data-focusable="1">Audio</button>
+      </div>
+      <button id="settingsBtn" class="ghost" data-focusable="1">Premium Settings</button>
+    </section>
+
+    <section id="settingsPanel" class="card settings hidden">
+      <strong>প্রিমিয়াম সেটিংস</strong>
+      <div class="twoBtns">
+        <button id="defaultQuality" data-focusable="1">Default: 360p</button>
+        <button id="audioFormat" data-focusable="1">Audio: m4a</button>
+      </div>
+      <div class="twoBtns">
+        <button id="autoAction" data-focusable="1">Share: Ask</button>
+        <button id="autoInfo" data-focusable="1">Auto Info: Off</button>
+      </div>
+      <div class="twoBtns">
+        <button id="pollMode" data-focusable="1">Poll: Normal</button>
+        <button id="serverCheck" data-focusable="1">Server Check</button>
+      </div>
+
+      <label for="apiBase">API Base <small>same server হলে খালি</small></label>
+      <input id="apiBase" type="text" autocomplete="off" placeholder="https://your-server.com">
+      <label for="token">Token <small>YTDLP_ACCESS_TOKEN থাকলে</small></label>
+      <input id="token" type="password" autocomplete="off" placeholder="ঐচ্ছিক">
+
+      <label for="searchQuery">YT Search <small>video/channel</small></label>
+      <input id="searchQuery" type="text" autocomplete="off" placeholder="search keyword">
+      <div class="twoBtns">
+        <button id="searchVideo" data-focusable="1">Search Video</button>
+        <button id="searchChannel" data-focusable="1">Search Channel</button>
+      </div>
+      <div class="twoBtns">
+        <button id="nextResult" data-focusable="1">Next Result</button>
+        <button id="useResult" data-focusable="1">Use Result</button>
+      </div>
+      <p id="searchStatus" class="mini">Search result এখানে দেখাবে।</p>
+
+      <div class="twoBtns lastRow">
+        <button id="lastBtn" data-focusable="1">Last Link</button>
+        <button id="clearBtn" data-focusable="1">Clear</button>
+      </div>
+      <p class="mini">0=Settings, 8=Default quality, 9=Auto mode</p>
+    </section>
+
+    <section id="result" class="card muted">
+      <strong>স্ট্যাটাস</strong>
+      <p id="message">শেয়ার করা URL পেলেই quality select করুন।</p>
+      <div id="bar"><span></span></div>
+      <pre id="details"></pre>
+    </section>
+
+    <section class="card tips">
+      <b>KaiOS shortcut</b>
+      <p>Left/1=Info, Right/3=360p, 2=240p, 5=480p, 7=720p, 4=Audio, 8=Default, 9=Auto mode।</p>
+    </section>
+  </main>
+
+  <footer class="softkeys">
+    <span>Info</span><span>OK Select</span><span id="rightSoftkey">360p</span>
+  </footer>
+
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
