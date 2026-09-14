@@ -1,0 +1,32 @@
+name: kaios-ytdlp
+
+services:
+  backend:
+    build: .
+    image: kaios-ytdlp:latest
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${HOST_PORT:-8080}:8080"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      DOWNLOAD_DIR: /app/downloads
+      YTDLP_ACCESS_TOKEN: "${YTDLP_ACCESS_TOKEN:-}"
+      API_MANIFEST_PATH: /app/api.raw.json
+      API_MANIFEST_URL: "${API_MANIFEST_URL:-}"
+      API_MANIFEST_REFRESH_SECONDS: "${API_MANIFEST_REFRESH_SECONDS:-3600}"
+      INNERTUBE_BOOTSTRAP_TTL_SECONDS: "${INNERTUBE_BOOTSTRAP_TTL_SECONDS:-3600}"
+      YTDLP_AUTO_UPDATE: "${YTDLP_AUTO_UPDATE:-1}"
+      YTDLP_UPDATE_CHANNEL: "${YTDLP_UPDATE_CHANNEL:-stable}"
+      YTDLP_UPDATE_INTERVAL_SECONDS: "${YTDLP_UPDATE_INTERVAL_SECONDS:-43200}"
+      MAX_CONCURRENT: "${MAX_CONCURRENT:-2}"
+      METADATA_TIMEOUT_SECONDS: "${METADATA_TIMEOUT_SECONDS:-45}"
+      JOB_TIMEOUT_SECONDS: "${JOB_TIMEOUT_SECONDS:-1800}"
+      CLEANUP_AFTER_SECONDS: "${CLEANUP_AFTER_SECONDS:-86400}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-*}"
+    volumes:
+      - downloads:/app/downloads
+
+volumes:
+  downloads:

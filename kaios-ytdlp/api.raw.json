@@ -1,0 +1,141 @@
+{
+  "schema": "arena.kaios_ytdlp.raw_api.v1",
+  "version": "2026.09.12.1",
+  "target": {
+    "kaios": "2.5",
+    "ui": "mozactivity-share",
+    "backend": "python-stdlib"
+  },
+  "auto_update": {
+    "raw_manifest_env": "API_MANIFEST_URL",
+    "refresh_seconds_env": "API_MANIFEST_REFRESH_SECONDS",
+    "default_refresh_seconds": 3600,
+    "innertube_bootstrap_ttl_seconds": 3600,
+    "notes": "Backend can reload this raw JSON from local file or a remote raw JSON URL. InnerTube API key/clientVersion are bootstrapped from YouTube HTML at runtime so the backend does not depend on hard-coded weekly web client versions."
+  },
+  "innertube": {
+    "base_url": "https://www.youtube.com/youtubei/v1",
+    "base_urls": [
+      "https://www.youtube.com/youtubei/v1",
+      "https://youtubei.googleapis.com/youtubei/v1"
+    ],
+    "bootstrap_urls": [
+      "https://www.youtube.com/",
+      "https://www.youtube.com/results?search_query=test"
+    ],
+    "bootstrap_regex": {
+      "api_key": "\\\"INNERTUBE_API_KEY\\\":\\\"([^\\\"]+)\\\"",
+      "client_version": "\\\"INNERTUBE_CLIENT_VERSION\\\":\\\"([^\\\"]+)\\\"",
+      "visitor_data": "\\\"VISITOR_DATA\\\":\\\"([^\\\"]+)\\\""
+    },
+    "headers": {
+      "Accept": "*/*",
+      "Content-Type": "application/json",
+      "Origin": "https://www.youtube.com",
+      "Referer": "https://www.youtube.com/",
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+    },
+    "clients": {
+      "web": {
+        "clientName": "WEB",
+        "clientVersion": "AUTO",
+        "hl": "en",
+        "gl": "US"
+      },
+      "web_embedded": {
+        "clientName": "WEB_EMBEDDED_PLAYER",
+        "clientVersion": "AUTO",
+        "clientScreen": "EMBED",
+        "hl": "en",
+        "gl": "US"
+      },
+      "android": {
+        "clientName": "ANDROID",
+        "clientVersion": "20.10.38",
+        "hl": "en",
+        "gl": "US"
+      }
+    },
+    "endpoints": {
+      "search": "/search",
+      "browse": "/browse",
+      "player": "/player",
+      "next": "/next"
+    },
+    "search_params": {
+      "all": "",
+      "video": "EgIQAQ==",
+      "channel": "EgIQAg==",
+      "playlist": "EgIQAw==",
+      "live": "EgJAAQ==",
+      "short": "EgIYAQ==",
+      "long": "EgIYAg=="
+    },
+    "channel": {
+      "videos_tab_params": "EgZ2aWRlb3MYASAAMAE=",
+      "accepted_id_regex": "^UC[A-Za-z0-9_-]{22}$"
+    }
+  },
+  "ytdlp": {
+    "bin_env": "YTDLP_BIN",
+    "default_bin": "yt-dlp",
+    "auto_update_env": "YTDLP_AUTO_UPDATE",
+    "update_channel_env": "YTDLP_UPDATE_CHANNEL",
+    "update_interval_seconds_env": "YTDLP_UPDATE_INTERVAL_SECONDS",
+    "common_args": [
+      "--no-playlist",
+      "--no-warnings",
+      "--socket-timeout",
+      "20"
+    ],
+    "extract_args": [
+      "--dump-single-json",
+      "--skip-download"
+    ],
+    "search_args": [
+      "--dump-json",
+      "--skip-download"
+    ],
+    "download_args": [
+      "--newline",
+      "--restrict-filenames",
+      "--no-part"
+    ],
+    "format_selectors": {
+      "kaios_video_mp4_height": "bestvideo[height<={height}][ext=mp4]+bestaudio[ext=m4a]/best[height<={height}][ext=mp4]/bestvideo[height<={height}]+bestaudio/best[height<={height}]/best",
+      "kaios_video_mp4_best": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/bestvideo+bestaudio/best",
+      "kaios_audio": "bestaudio/best"
+    },
+    "merge_output_format": "mp4",
+    "remux_video": "mp4",
+    "audio_quality": "0",
+    "safe_audio_formats": ["m4a", "mp3", "opus", "ogg", "wav"]
+  },
+  "ffmpeg": {
+    "required_for": ["video_audio_merge", "audio_extract", "remux"],
+    "default_bin": "ffmpeg",
+    "preferred_video_container": "mp4",
+    "preferred_audio_container": "m4a",
+    "kaios_preferred_codecs": {
+      "video": ["h264", "avc1"],
+      "audio": ["aac", "mp4a"]
+    }
+  },
+  "backend_api": {
+    "status": "GET /status",
+    "manifest": "GET /api/manifest",
+    "innertube_search": "POST /api/yt/search",
+    "innertube_channel": "POST /api/yt/channel",
+    "ytdlp_extract": "POST /api/extract",
+    "metadata": "POST /api/resolve",
+    "download_job": "POST /api/jobs",
+    "job_status": "GET /api/jobs/{id}",
+    "file_download": "GET /api/files/{id}"
+  },
+  "safety": {
+    "private_network_urls": "blocked",
+    "playlists_by_default": false,
+    "cookies_by_default": false,
+    "intended_use": "own, permitted, public-domain or licensed downloadable content only"
+  }
+}

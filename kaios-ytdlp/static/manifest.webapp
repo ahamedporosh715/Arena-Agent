@@ -1,0 +1,63 @@
+{
+  "name": "Premium Downloader",
+  "display": "Premium",
+  "version": "1.2.0",
+  "subtitle": "Share to download",
+  "description": "Receive links from KaiOS Browser Share and download permitted video plus audio or audio-only files through a private backend.",
+  "launch_path": "/index.html",
+  "type": "web",
+  "categories": ["utilities"],
+  "theme_color": "#101827",
+  "cursor": false,
+  "fullscreen": true,
+  "orientation": "portrait-primary",
+  "icons": {
+    "56": "/icon-56.png",
+    "112": "/icon-112.png"
+  },
+  "activities": {
+    "share": {
+      "href": "/index.html",
+      "disposition": "window",
+      "returnValue": false,
+      "filters": {
+        "type": ["url", "text/url", "text/plain", "text/html"]
+      }
+    },
+    "view": {
+      "href": "/index.html",
+      "disposition": "window",
+      "returnValue": false,
+      "filters": {
+        "type": "url",
+        "url": {
+          "required": true,
+          "regexp": "https?:.{1,2048}"
+        }
+      }
+    }
+  },
+  "messages": [
+    { "activity": "/index.html" }
+  ],
+  "permissions": {
+    "mobiledata": {},
+    "wifidata": {}
+  },
+  "developer": {
+    "name": "Arena-Agent"
+  },
+  "default_locale": "bn-BD",
+  "locales": {
+    "bn-BD": {
+      "name": "Premium Downloader",
+      "subtitle": "Share to download",
+      "description": "KaiOS Browser Share থেকে লিংক নিয়ে private backend দিয়ে অনুমতিপ্রাপ্ত video+audio বা audio-only ফাইল ডাউনলোড করুন।"
+    },
+    "en-US": {
+      "name": "Premium Downloader",
+      "subtitle": "Share to download",
+      "description": "Receive links from KaiOS Browser Share and download permitted video plus audio or audio-only files through a private backend."
+    }
+  }
+}

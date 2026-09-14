@@ -11,6 +11,30 @@ permissions:
   contents: read
 
 jobs:
+  # ---------- Python: KaiOS yt-dlp backend unit tests ----------
+  kaios-ytdlp:
+    name: KaiOS yt-dlp backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kaios-ytdlp
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: static checks
+        run: |
+          python -m json.tool api.raw.json >/dev/null
+          python -m json.tool static/manifest.webapp >/dev/null
+          node --check static/app.js
+          python -m py_compile server.py
+      - name: unit tests
+        run: python -m unittest discover -s tests -v
+
   # ---------- Go: ভেট + টেস্ট + বিল্ড ----------
   go:
     name: Go vet / test / build
