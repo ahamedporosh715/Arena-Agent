@@ -1,0 +1,111 @@
+<div class="kui-flex-wrap" style="background-color:#000000;color:#ffffff;font-size:14px;">
+  <style>
+    pre {
+      margin: 0;
+      padding: 0;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .kui-header{
+      height:0px;
+    }
+    .kui-router-m-top{
+      margin-top:0;
+    }
+    .kui-router-h-hdr-sk {
+      height: calc(100vh - 30px) !important;
+      overflow-y: hidden;
+    }
+    .marquee {
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .marquee span {
+      display: inline-block;
+      height: 20px;
+      padding-left: 100%;  /* show the marquee just outside the paragraph */
+      animation: marquee 15s linear infinite;
+    }
+    /* Make it move */
+    @keyframes marquee {
+      0%   { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+    .inactive {
+      -webkit-filter: opacity(.4);
+      filter: opacity(.4);
+    }
+    .duration-container {
+      position:relative;
+      height:22px;
+      width:95%;
+    }
+    .duration-bar {
+      position:absolute;
+      top:10px;
+      width:0%;
+      height:4px;
+      border-radius:5px;
+    }
+    .duration-marker {
+      position:absolute;
+      top:7px;
+      margin-left:0%;
+      background-color:#ffffff;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+    }
+  </style>
+  <div class="kai-container" style="margin:5px;">
+    <div>
+      <h3 class="marquee">
+        <span id="main_title">YT Music</span>
+      </h3>
+    </div>
+    <div class="kui-row-center" style="margin-top:5px;justify-content:start;">
+      <div id="main_thumb" style="border:1px solid #ffffff;width:77px;height:77px;object-fit:cover;background-size:cover;background-repeat:no-repeat;background-position:center;background-image:url(/icons/img/baseline_person_white_36dp.png)">
+        <img id="thumb_buffering" height="78px" width="78px" src="/icons/img/loading.gif"/>
+      </div>
+      <div style="width:65%;height:78.75px;padding:0px 0px 0px 5px;justify-content:flex-end;overflow:hidden;">
+        <div class="kui-row-center" style="justify-content:flex-start;">
+          <img width="15px" height="15px" src="/icons/img/baseline_person_white_36dp.png"/>
+          <pre id="main_artist" style="padding-left:5px;">Artist</pre>
+        </div>
+        <div class="kui-row-center" style="justify-content:start;">
+          <img width="15px" height="15px" src="/icons/img/baseline_album_white_36dp.png"/>
+          <pre id="main_album" style="padding-left:5px;">Album</pre>
+        </div>
+        <div class="kui-row-center" style="justify-content:start;">
+          <img width="15px" height="15px" src="/icons/img/baseline_music_note_white_36dp.png"/>
+          <pre id="main_genre" style="padding-left:5px;">Genre</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="kui-row-center" style="margin-top:10px">
+      <img id="main_repeat" class="inactive" style="padding-right:5px;" width="16px" height="16px" src="/icons/img/baseline_repeat_white_18dp.png"/>
+      <img id="main_shuffle" class="inactive" style="padding-right:5px;" width="16px" height="16px" src="/icons/img/baseline_shuffle_white_18dp.png"/>
+      <div style="width:100px;text-align:right;">
+        <div class="kui-row-center" style="justify-content:end;">
+          <img width="16xp" height="16xp" src="/icons/img/baseline_playlist_play_white_36dp.png"/>
+          <pre id="main_list" style="padding-left:5px;">0/0</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="duration-container" style="margin-top:5px;">
+      <div                             class="duration-bar" style="background-color:#ffffff;width:105%"></div>
+      <div id="main_duration_elapsed"  class="duration-bar" style="background-color:rgba(255, 0, 0, 1);"></div>
+      <div id="main_duration_buffered" class="duration-bar" style="background-color:rgba(255, 0, 0, 0.5);"></div>
+      <div id="main_duration_slider" class="duration-marker"></div>
+    </div>
+
+    <div class="kui-row-center" style="margin-top:5px">
+      <div id="main_current_time" style="width:34%;">00:00</div>
+      <img id="main_play_btn" width="36px" height="36px" src="/icons/img/baseline_play_circle_filled_white_36dp.png"/>
+      <div id="main_duration" style="width:34%;text-align:right;">00:00</div>
+    </div>
+  </div>
+</div>

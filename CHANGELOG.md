@@ -6,9 +6,21 @@ Railway-তে "আপডেট উপলব্ধ" নোটিফিকেশ�
 
 ## [Unreleased]
 
+### Added
+
+- 🎵 `kai-yt-music/` — KaiOS 2.5 “YT Music” অ্যাপ (upstream v2.1.5 → **v2.2.0**), সম্পূর্ণ bug audit সহ ([BUGFIX_AUDIT.md](kai-yt-music/BUGFIX_AUDIT.md)):
+  - stream/playlist backend rewrite: Invidious REST API, persisted + health-checked instance, auto fail-over, `local=true` proxied stream, `/latest_version` last resort; noembed/onecompiler/herokuapp/koyeb/vid.puffyan.us নির্ভরতা বাদ
+  - playlist import ID **বা** URL (text prompt) + QR; Invidious playlists pagination → YouTube/InnerTube fallback (issue #5/#7/#8 “Empty” fix); Sync `videoId` dedupe
+  - search: `ytInitialData` brace-matching parser, InnerTube continuation (page client version), Invidious search fallback, live filter
+  - app.js: ~25 crash/logic fix (null `obj`, `onerror`, keypad shortcuts in dialogs, Equalizer dead menu, settings toggle, metadata `track`, retry loop, object URL leak, wakeLock/volumeManager/deviceStorage guards, localforage driver fallback…)
+  - KaiKit: Backspace `ReferenceError`, keydown listener leak, `[tabIndex` selector, selector cancel crash, multi-select index bug
+  - datastorage.js: missing device-storage API graceful, enumerate hang, `newFolder` promise never settling
+  - tests: `npm test` (37 unit, fake XHR) + `npm run test:smoke` (jsdom, 3 scenario); CI job `kai-yt-music`
+
 ### Changed
 
 - `.railway/railway.ts` env-aware হয়েছে (production ≠ preview)
+- `.github/workflows/ci.yml` — নতুন `kai-yt-music` job (node --check, unit, jsdom smoke)
 
 ## [0.3.0] — 2026-09-12 — One-Click Premium Template
 

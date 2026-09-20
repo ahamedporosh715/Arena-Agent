@@ -1,0 +1,55 @@
+{
+  "version": "2.2.0",
+  "name": "YT Music",
+  "description": "YT Music client",
+  "launch_path": "/index.html",
+  "theme": "#FF0000",
+  "theme_color": "#FF0000",
+  "background_color": "#FF0000",
+  "categories": [
+    "utilities"
+  ],
+  "icons": {
+    "56": "/icons/icon56x56.png",
+    "112": "/icons/icon112x112.png"
+  },
+  "developer": {
+    "name": "arma7x",
+    "url": "https://github.com/arma7x"
+  },
+  "userAgentInfo": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36",
+  "origin": "app://ytm.arma7x.com",
+  "type": "privileged",
+  "permissions": {
+    "device-storage:sdcard":{
+      "access": "readwrite",
+      "description": "Store audio files on device storage"
+    },
+    "systemXHR": {
+      "description": "Required to load remote content"
+    },
+    "audio-channel-normal": {
+      "description" : "To play audio in normal channel"
+    },
+    "audio-channel-content": {
+      "description": "To play audio in background channel"
+    },
+    "volumemanager": {
+      "description": "To control volume manager"
+    },
+    "serviceworker": {
+      "description": "Needed for assocating service worker"
+    },
+    "video-capture": {
+      "description": "Required for qr-code reader(playlist id qr-code)"
+    }
+  },
+  "locales": {
+    "en-US": {
+      "name": "YT Music",
+      "subtitle": "YT Music client",
+      "description": "YT Music client"
+    }
+  },
+  "default_locale": "en-US"
+}
