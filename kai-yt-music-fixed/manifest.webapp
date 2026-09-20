@@ -1,0 +1,67 @@
+{
+  "name": "YT Music - Fixed",
+  "display": "YT Music",
+  "version": "2.0.0-FIXED",
+  "subtitle": "YouTube Music Player - Fixed",
+  "description": "Fixed YT Music player for KaiOS 2.5 - All bugs fixed: songs playing via backend proxy, all actions working, search, playlist, download, local playback.",
+  "launch_path": "/index.html",
+  "type": "web",
+  "categories": ["music", "utilities"],
+  "theme_color": "#0f0f0f",
+  "cursor": false,
+  "fullscreen": true,
+  "orientation": "portrait-primary",
+  "icons": {
+    "56": "/icon-56.png",
+    "112": "/icon-112.png"
+  },
+  "activities": {
+    "share": {
+      "href": "/index.html",
+      "disposition": "window",
+      "returnValue": false,
+      "filters": {
+        "type": ["url", "text/url", "text/plain", "text/html"]
+      }
+    },
+    "view": {
+      "href": "/index.html",
+      "disposition": "window",
+      "returnValue": false,
+      "filters": {
+        "type": "url",
+        "url": {
+          "required": true,
+          "regexp": "https?:.{1,2048}"
+        }
+      }
+    }
+  },
+  "messages": [
+    { "activity": "/index.html" }
+  ],
+  "permissions": {
+    "mobiledata": {},
+    "wifidata": {},
+    "audio-channel-content": {},
+    "device-storage:sdcard": { "access": "readwrite" },
+    "device-storage:videos": { "access": "readwrite" },
+    "device-storage:music": { "access": "readwrite" }
+  },
+  "developer": {
+    "name": "Arena-Agent Fixed"
+  },
+  "default_locale": "en-US",
+  "locales": {
+    "en-US": {
+      "name": "YT Music - Fixed",
+      "subtitle": "Music Player Fixed",
+      "description": "Fixed YT Music player - All playback bugs fixed via backend proxy, actions working, search, playlists."
+    },
+    "bn-BD": {
+      "name": "YT Music - Fixed",
+      "subtitle": "Music Player Fixed",
+      "description": "Fixed YT Music player - সমস্ত বাগ ফিক্সড, গান বাজছে, সব action কাজ করছে"
+    }
+  }
+}

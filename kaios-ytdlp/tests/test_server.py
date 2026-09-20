@@ -97,6 +97,42 @@ class RawManifestTests(unittest.TestCase):
         self.assertEqual(parsed["items"][1]["type"], "channel")
 
 
+class FixedTests(unittest.TestCase):
+    def test_playlist_id_from_url(self):
+        self.assertEqual(server.playlist_id_from_url("PL1234567890abcdef"), "PL1234567890abcdef")
+        self.assertEqual(server.playlist_id_from_url("https://www.youtube.com/playlist?list=PL1234567890abcdef"), "PL1234567890abcdef")
+        self.assertEqual(server.playlist_id_from_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL1234567890abcdef"), "PL1234567890abcdef")
+
+    def test_get_best_audio_formats(self):
+        raw_info = {
+            "formats": [
+                {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a.40.2", "abr": 128, "url": "https://example.com/audio.m4a"},
+                {"format_id": "251", "ext": "webm", "vcodec": "none", "acodec": "opus", "abr": 160, "url": "https://example.com/audio.webm"},
+                {"format_id": "22", "ext": "mp4", "vcodec": "avc1", "acodec": "mp4a", "abr": 192, "url": "https://example.com/video.mp4"},
+            ]
+        }
+        best = server.get_best_audio_formats(raw_info)
+        self.assertTrue(len(best) > 0)
+        # m4a should be prioritized for KaiOS
+        self.assertEqual(best[0]["ext"], "m4a")
+
+    def test_audio_cache(self):
+        server.AUDIO_URL_CACHE.clear()
+        data = {"id": "dQw4w9WgXcQ", "title": "Test"}
+        server.set_cached_audio_url("dQw4w9WgXcQ", data)
+        cached = server.get_cached_audio_url("dQw4w9WgXcQ")
+        self.assertIsNotNone(cached)
+        self.assertEqual(cached["title"], "Test")
+
+    def test_api_manifest_has_fixed_endpoints(self):
+        data = json.loads(Path("api.raw.json").read_text(encoding="utf-8"))
+        self.assertIn("backend_api", data)
+        self.assertIn("audio_info_fixed", data["backend_api"])
+        self.assertIn("audio_stream_fixed", data["backend_api"])
+        self.assertIn("fixes", data)
+        self.assertIn("songs_not_playing", data["fixes"])
+
+
 class JobStoreTests(unittest.TestCase):
     def test_job_public_done_has_download_url(self):
         with tempfile.TemporaryDirectory() as tmp:

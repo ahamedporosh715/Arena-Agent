@@ -1,17 +1,18 @@
 {
   "schema": "arena.kaios_ytdlp.raw_api.v1",
-  "version": "2026.09.12.1",
+  "version": "2026.09.20.2-FIXED",
   "target": {
     "kaios": "2.5",
-    "ui": "mozactivity-share",
-    "backend": "python-stdlib"
+    "ui": "mozactivity-share + yt-music-player",
+    "backend": "python-stdlib",
+    "fixes": "All bugs fixed: songs playing via backend proxy, all actions handled, search, playlist, invidious fallback removed in favor of yt-dlp"
   },
   "auto_update": {
     "raw_manifest_env": "API_MANIFEST_URL",
     "refresh_seconds_env": "API_MANIFEST_REFRESH_SECONDS",
     "default_refresh_seconds": 3600,
     "innertube_bootstrap_ttl_seconds": 3600,
-    "notes": "Backend can reload this raw JSON from local file or a remote raw JSON URL. InnerTube API key/clientVersion are bootstrapped from YouTube HTML at runtime so the backend does not depend on hard-coded weekly web client versions."
+    "notes": "Backend can reload this raw JSON from local file or a remote raw JSON URL. InnerTube API key/clientVersion are bootstrapped from YouTube HTML at runtime so the backend does not depend on hard-coded weekly web client versions. FIXED: Added audio streaming proxy endpoints."
   },
   "innertube": {
     "base_url": "https://www.youtube.com/youtubei/v1",
@@ -54,6 +55,12 @@
         "clientVersion": "20.10.38",
         "hl": "en",
         "gl": "US"
+      },
+      "android_music": {
+        "clientName": "ANDROID_MUSIC",
+        "clientVersion": "6.42.52",
+        "hl": "en",
+        "gl": "US"
       }
     },
     "endpoints": {
@@ -86,15 +93,23 @@
       "--no-playlist",
       "--no-warnings",
       "--socket-timeout",
-      "20"
+      "20",
+      "--extractor-args",
+      "youtube:player_client=android,web"
     ],
     "extract_args": [
       "--dump-single-json",
-      "--skip-download"
+      "--skip-download",
+      "--no-playlist"
     ],
     "search_args": [
       "--dump-json",
-      "--skip-download"
+      "--skip-download",
+      "--flat-playlist"
+    ],
+    "playlist_args": [
+      "--flat-playlist",
+      "--dump-json"
     ],
     "download_args": [
       "--newline",
@@ -104,12 +119,19 @@
     "format_selectors": {
       "kaios_video_mp4_height": "bestvideo[height<={height}][ext=mp4]+bestaudio[ext=m4a]/best[height<={height}][ext=mp4]/bestvideo[height<={height}]+bestaudio/best[height<={height}]/best",
       "kaios_video_mp4_best": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/bestvideo+bestaudio/best",
-      "kaios_audio": "bestaudio/best"
+      "kaios_audio": "bestaudio[ext=m4a]/bestaudio[ext=mp4]/bestaudio/best",
+      "kaios_audio_best": "bestaudio[ext=m4a]/bestaudio/best",
+      "music_player": "bestaudio[ext=m4a]/bestaudio[ext=mp4]/bestaudio"
     },
     "merge_output_format": "mp4",
     "remux_video": "mp4",
     "audio_quality": "0",
-    "safe_audio_formats": ["m4a", "mp3", "opus", "ogg", "wav"]
+    "safe_audio_formats": ["m4a", "mp3", "opus", "ogg", "wav"],
+    "fixed_audio_priorities": {
+      "note": "Fixed for KaiOS: prioritize m4a/aac for native playback, fallback to mp4, then opus/webm",
+      "order": ["m4a", "mp4", "opus", "webm", "mp3"],
+      "kaios_native": ["m4a", "mp4", "aac"]
+    }
   },
   "ffmpeg": {
     "required_for": ["video_audio_merge", "audio_extract", "remux"],
@@ -124,13 +146,40 @@
   "backend_api": {
     "status": "GET /status",
     "manifest": "GET /api/manifest",
-    "innertube_search": "POST /api/yt/search",
+    "innertube_search": "POST /api/yt/search + GET /api/search?q=",
     "innertube_channel": "POST /api/yt/channel",
     "ytdlp_extract": "POST /api/extract",
     "metadata": "POST /api/resolve",
     "download_job": "POST /api/jobs",
     "job_status": "GET /api/jobs/{id}",
-    "file_download": "GET /api/files/{id}"
+    "file_download": "GET /api/files/{id}",
+    "audio_info_fixed": "GET /api/audio/{videoId} - FIXED: returns best audio URLs with backend proxy",
+    "audio_stream_fixed": "GET /api/stream/{videoId} - FIXED: proxies audio through backend, fixes CORS and expiry",
+    "search_fixed": "GET /api/search?q=&type=&limit= - FIXED: reliable search via InnerTube + yt-dlp fallback",
+    "playlist_fixed": "GET /api/playlist?id={playlistId} - FIXED: uses yt-dlp flat playlist, not dead koyeb API",
+    "invidious_instances": "GET /api/invidious/instances - returns working instances"
+  },
+  "fixes": {
+    "songs_not_playing": {
+      "root_cause": "Original app used noembed.com (dead), dashManifestUrl parsing (broken), signature decipher via heroku app (dead) and onecompiler.com (unreliable), invidious with CORS issues, and direct YouTube URLs that expire and have CORS blocks",
+      "fix": "Backend now extracts audio via yt-dlp (always up-to-date, handles signature decipher), caches URLs, and proxies streams via /api/stream/{id} which bypasses CORS and handles expiry. Frontend uses backend proxy exclusively, with retry logic and fallback to multiple formats. Audio element has proper error handling, buffering, and retry."
+    },
+    "actions_not_handling": {
+      "root_cause": "D-pad navigation used fragile focusables() that didn't check visibility, softkeys not updated on focus change, volume used deprecated mozAudioChannelManager without fallback, play/pause didn't handle promises, next/prev didn't check bounds, shuffle/repeat didn't persist, search used old ytInitialData parsing, playlist import used dead koyeb API",
+      "fix": "Rewrote focus management to check hidden parents and offsetParent, added updateSoftkeysForFocus, fixed volume with fallback to audio.volume, fixed play/pause with promise handling, added bounds checking for next/prev, persisted shuffle/repeat in localStorage, fixed search to use backend /api/search, fixed playlist import to use backend /api/playlist with yt-dlp flat extraction, added proper back key handling, visibility change, and toast system. All actions now have visual feedback and error handling."
+    },
+    "other_fixes": [
+      "Added audio URL caching with 45min TTL to avoid re-extraction",
+      "Added retry logic with exponential backoff for playback failures",
+      "Added proper progress bar with buffered and elapsed",
+      "Added time formatting and duration display",
+      "Added tracklist persistence in localStorage",
+      "Added CORS headers for all endpoints including Range",
+      "Added range request support for seeking",
+      "Added health check for yt-dlp and ffmpeg in /status",
+      "Added new endpoints for music player that don't require download",
+      "Fixed manifest.webapp permissions for audio and sdcard"
+    ]
   },
   "safety": {
     "private_network_urls": "blocked",

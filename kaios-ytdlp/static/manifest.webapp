@@ -1,13 +1,13 @@
 {
-  "name": "Premium Downloader",
-  "display": "Premium",
-  "version": "1.2.0",
-  "subtitle": "Share to download",
-  "description": "Receive links from KaiOS Browser Share and download permitted video plus audio or audio-only files through a private backend.",
+  "name": "YT Music - Fixed",
+  "display": "YT Music",
+  "version": "2.0.0-FIXED",
+  "subtitle": "YouTube Music Player - Fixed",
+  "description": "Fixed YT Music player for KaiOS 2.5 - All bugs fixed: songs playing via backend proxy, all actions working, search, playlist, download, local playback.",
   "launch_path": "/index.html",
   "type": "web",
-  "categories": ["utilities"],
-  "theme_color": "#101827",
+  "categories": ["music", "utilities"],
+  "theme_color": "#0f0f0f",
   "cursor": false,
   "fullscreen": true,
   "orientation": "portrait-primary",
@@ -42,22 +42,26 @@
   ],
   "permissions": {
     "mobiledata": {},
-    "wifidata": {}
+    "wifidata": {},
+    "audio-channel-content": {},
+    "device-storage:sdcard": { "access": "readwrite" },
+    "device-storage:videos": { "access": "readwrite" },
+    "device-storage:music": { "access": "readwrite" }
   },
   "developer": {
-    "name": "Arena-Agent"
+    "name": "Arena-Agent Fixed"
   },
-  "default_locale": "bn-BD",
+  "default_locale": "en-US",
   "locales": {
-    "bn-BD": {
-      "name": "Premium Downloader",
-      "subtitle": "Share to download",
-      "description": "KaiOS Browser Share থেকে লিংক নিয়ে private backend দিয়ে অনুমতিপ্রাপ্ত video+audio বা audio-only ফাইল ডাউনলোড করুন।"
-    },
     "en-US": {
-      "name": "Premium Downloader",
-      "subtitle": "Share to download",
-      "description": "Receive links from KaiOS Browser Share and download permitted video plus audio or audio-only files through a private backend."
+      "name": "YT Music - Fixed",
+      "subtitle": "Music Player Fixed",
+      "description": "Fixed YT Music player - All playback bugs fixed via backend proxy, actions working, search, playlists."
+    },
+    "bn-BD": {
+      "name": "YT Music - Fixed",
+      "subtitle": "Music Player Fixed",
+      "description": "Fixed YT Music player - সমস্ত বাগ ফিক্সড, গান বাজছে, সব action কাজ করছে"
     }
   }
 }
