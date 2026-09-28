@@ -35,6 +35,29 @@ jobs:
       - name: unit tests
         run: python -m unittest discover -s tests -v
 
+  # ---------- KaiOS YT Music: syntax + unit + jsdom smoke ----------
+  kai-yt-music:
+    name: KaiOS YT Music tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kai-yt-music
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: kai-yt-music/package-lock.json
+      - name: ডিপেন্ডেন্সি (শুধু jsdom, টেস্টের জন্য)
+        run: npm ci --no-audit --no-fund
+      - name: static checks (node --check + manifest JSON)
+        run: npm run check
+      - name: unit tests (extractor / scrapper / utils / datastorage)
+        run: npm test
+      - name: jsdom smoke test (পুরো অ্যাপ, ফেক নেটওয়ার্ক)
+        run: npm run test:smoke
+
   # ---------- Go: ভেট + টেস্ট + বিল্ড ----------
   go:
     name: Go vet / test / build

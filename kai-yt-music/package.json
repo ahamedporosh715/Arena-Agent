@@ -1,0 +1,16 @@
+{
+  "name": "kai-yt-music",
+  "version": "2.2.0",
+  "private": true,
+  "description": "YT Music client for KaiOS 2.5 — tests only; the app itself is plain browser JS (no build step)",
+  "license": "Unlicense",
+  "scripts": {
+    "check": "for f in app.js sw.js js/*.js kaikit/*.js tests/*.js; do node --check \"$f\" || exit 1; done && node -e \"JSON.parse(require('fs').readFileSync('manifest.webapp','utf8'))\"",
+    "test": "node --test tests/run.test.js",
+    "test:smoke": "node tests/smoke.jsdom.js",
+    "package": "zip -r -X ../kai-yt-music-$npm_package_version.zip . -x 'node_modules/*' 'tests/*' 'package.json' 'package-lock.json' '.gitignore' 'BUGFIX_AUDIT.md' 'README.md'"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  }
+}
